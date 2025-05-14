@@ -170,7 +170,7 @@ void Application::Render()
     {
         return;
     }
-    if (!m_previousFrameResult.renderStream || m_previousFrameResult.renderStream->view() != m_frameResult.renderStream->view())
+    if (!m_previousFrameResult.renderStream || m_previousFrameResult.renderStream->str() != m_frameResult.renderStream->str())
     {
         ClearRender();
         std::cout << m_frameResult.renderStream->rdbuf();
