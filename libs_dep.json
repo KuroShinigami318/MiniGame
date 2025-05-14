@@ -2,9 +2,14 @@
 "_comment": "@name: folder name | @prj_name: git/cmake project name | @tag: git tag/branch",
 "libs": [
  {
-    "name": "",
-    "prj_name": "",
-    "tag": ""
+    "name": "common",
+    "prj_name": "CommonLib",
+    "tag": "master"
+ },
+ {
+    "name": "BLog",
+    "prj_name": "BLog",
+    "tag": "master"
  }
 ]
 }
