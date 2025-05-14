@@ -39,7 +39,7 @@ struct Vec
 		return i_lhs _op##= i_rhs; \
 	}
 
-	constexpr Vec(T i_value)
+	constexpr Vec(T i_value) : m_data()
 	{
 		for (size_t i = 0; i < size; ++i)
 		{
