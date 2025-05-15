@@ -6,7 +6,11 @@
 
 void ClearRender()
 {
+#if defined(USE_WIN32_API)
+    system("cls");
+#else
     std::cout << "\033c";
+#endif
 }
 
 Application::Application(utils::unique_ref<utils::IHeartBeats> i_heart)
