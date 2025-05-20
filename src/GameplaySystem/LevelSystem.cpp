@@ -10,7 +10,7 @@
 
 namespace
 {
-constexpr const int k_heightLimit = 25;
+constexpr const int k_heightLimit = 10;
 }
 
 LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue)
@@ -22,8 +22,13 @@ LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemC
 	utils::async(m_thisFrameQueue,
 		[this]()
 		{
-			utils::Access<SignalKey>(sig_onLevelChanged).Emit(GenerateRandomLevel(m_randomGenerator(), m_randomGenerator() % k_heightLimit));
+			utils::Access<SignalKey>(sig_onLevelChanged).Emit(GenerateRandomLevel(m_randomGenerator(), ClampRandomGeneratedValue(m_randomGenerator(), (m_randomGenerator.min)(), k_heightLimit)));
 		});
+}
+
+int LevelSystem::ClampRandomGeneratedValue(int i_value, int i_min, int i_max) const
+{
+	return (i_value % (i_max - i_min)) + (i_min);
 }
 
 void LevelSystem::Update(float i_elapsed)

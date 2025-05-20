@@ -19,6 +19,7 @@ public:
 private:
 	void Update(float i_elapsed);
 	std::unique_ptr<ILevel> GenerateRandomLevel(size_t i_width, size_t i_height);
+	int ClampRandomGeneratedValue(int i_value, int i_min, int i_max) const;
 
 public:
 	utils::Signal_public<void(std::unique_ptr<ILevel>), SignalKey> sig_onLevelChanged;
