@@ -3,14 +3,12 @@
 #include "IHeartBeats.h"
 #include "IInputDevice.h"
 #include "Game.h"
+#include "Log.h"
 
 void ClearRender()
 {
-#if defined(USE_WIN32_API)
-    system("cls");
-#else
-    std::cout << "\033c";
-#endif
+	ScopedVirtualConsoleMode();
+    std::cout << "\033c\033[?25l";
 }
 
 Application::Application(utils::unique_ref<utils::IHeartBeats> i_heart)

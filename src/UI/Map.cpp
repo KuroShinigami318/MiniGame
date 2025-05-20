@@ -68,7 +68,7 @@ void Map::Render(RendererT& o_renderStream) const
 			}
 			o_renderStream << " ";
 		}
-		o_renderStream << std::endl;
+		o_renderStream << std::endl << "\033[1G";
 	}
 }
 
