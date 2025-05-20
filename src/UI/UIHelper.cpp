@@ -3,9 +3,7 @@
 
 std::string FormatText(const char* i_text, utils::Log::TextFormat i_textFormat)
 {
-#if defined(USE_WIN32_API)
-	std::string formatterColor = "{1}";
-#else
+	ScopedVirtualConsoleMode();
 	std::string formatterColor = "\033[{0}m{1}\033[0m";
 	if (i_textFormat.textColor.IsValidColor() && i_textFormat.backgroundColor.IsValidColor())
 	{
@@ -19,6 +17,5 @@ std::string FormatText(const char* i_text, utils::Log::TextFormat i_textFormat)
 	{
 		formatterColor = "\033[{0};48;2;{5};{6};{7}m{1}\033[0m";
 	}
-#endif
 	return utils::Format(formatterColor.c_str(), std::underlying_type_t<utils::Log::TextStyle>(i_textFormat.textStyle), i_text, i_textFormat.textColor.red.value, i_textFormat.textColor.green.value, i_textFormat.textColor.blue.value, i_textFormat.backgroundColor.red.value, i_textFormat.backgroundColor.green.value, i_textFormat.backgroundColor.blue.value);
 }
