@@ -74,7 +74,21 @@ void Map::Render(RendererT& o_renderStream) const
 
 utils::unique_ref<IComponent> Map::Clone()
 {
-	return new Map();
+	MapT clonedMap;
+	for (size_t row = 0; row < m_map.size(); ++row)
+	{
+		clonedMap.emplace_back(m_map[row].size());
+		for (size_t col = 0; col < m_map[row].size(); ++col)
+		{
+			if (m_map[row][col].component)
+			{
+				clonedMap[row][col].component = utils::to_std_unique_ptr(m_map[row][col].component->Clone());
+			}
+		}
+	}
+	Map* map = new Map();
+	map->Initialize(std::move(clonedMap)).assertSuccess();
+	return map;
 }
 
 Map::Result Map::CheckValidMap(const MapT& i_map) const
