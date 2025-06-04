@@ -14,7 +14,14 @@ private:
 	bool OnInputReceived(std::string i_input);
 
 private:
+	struct InputDeviceHolder
+	{
+		IInputDevice& device;
+		utils::Connection connection;
+	};
+
+private:
 	std::unordered_map<std::string, ControlType> m_inputControlMapped;
-	IInputDevice* m_inputDevice;
+	std::unordered_map<IInputDevice*, InputDeviceHolder> m_inputDevices;
 	utils::Connection m_onInputConnection;
 };

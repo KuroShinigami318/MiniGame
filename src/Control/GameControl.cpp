@@ -4,24 +4,23 @@
 
 GameControl::GameControl()
 	: m_inputControlMapped({{"w", ControlType::MoveUp}, { "s", ControlType::MoveDown }, { "a", ControlType::MoveLeft } , { "d", ControlType::MoveRight } })
-	, m_inputDevice(nullptr)
+	, m_inputDevices()
 {
 }
 
 void GameControl::RegisterInputDevice(IInputDevice& i_inputDevice)
 {
-	if (m_inputDevice != &i_inputDevice)
+	if (m_inputDevices.find(&i_inputDevice) == m_inputDevices.end())
 	{
-		m_inputDevice = &i_inputDevice;
+		m_inputDevices.try_emplace(&i_inputDevice, InputDeviceHolder{ i_inputDevice, i_inputDevice.sig_onInput.Connect(&GameControl::OnInputReceived, this) });
 	}
-	m_onInputConnection = m_inputDevice->sig_onInput.Connect(&GameControl::OnInputReceived, this);
 }
 
 void GameControl::UnregisterInputDevice(IInputDevice& i_inputDevice)
 {
-	if (m_inputDevice == &i_inputDevice)
+	if (auto foundInputDeviceIt = m_inputDevices.find(&i_inputDevice); foundInputDeviceIt != m_inputDevices.end())
 	{
-		m_inputDevice = nullptr;
+		m_inputDevices.erase(foundInputDeviceIt);
 	}
 }
 
