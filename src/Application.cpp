@@ -18,6 +18,7 @@ Application::Application(utils::unique_ref<utils::IHeartBeats> i_heart)
     , m_frameThread({ &Application::FramePrologue, this }, { &Application::FrameEpilogue, this })
 {
     utils::async(GetNextFrameMessageQueue(), &Application::CreateGame, this);
+    utils::Log::RegisterWriter<utils::Log::DefaultConsoleWriter>();
 }
 
 Application::~Application() = default;
