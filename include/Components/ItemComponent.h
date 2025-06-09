@@ -1,10 +1,18 @@
 #pragma once
+#include "GameplaySystem/IBreakable.h"
+#include "GameplaySystem/ICollidable.h"
 #include "UI/IUIComponent.h"
 
-class ItemComponent : public IUIComponent
+class ILevel;
+
+class ItemComponent : public IUIComponent, public IBreakable, public ICollidable
 {
 public:
-	ItemComponent() = default;
+	ItemComponent(const UIContext& i_uiContext, ILevel& i_level);
 	void Render(RendererT& o_renderStream) const override;
 	utils::unique_ref<IComponent> Clone() override;
+	void OnCollision(const ICollidable& i_other) override;
+
+private:
+	ILevel& m_level;
 };

@@ -15,16 +15,9 @@ Game::Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFr
 	, m_gameControl(new GameControl())
 	, m_uiManager(new UIManager())
 	, m_levelSystem(new LevelSystem(*m_gameControl, *m_systemClock, m_thisFrameQueue))
-	, m_mapSystem(new MapSystem(*m_gameControl, *m_uiManager, *m_systemClock))
+	, m_mapSystem(new MapSystem(*m_gameControl, *m_uiManager, *m_systemClock, m_thisFrameQueue))
 {
 	m_connections.push_back(m_levelSystem->sig_onLevelChanged.Connect(&MapSystem::SetLevel, m_mapSystem.get()));
-	std::vector<std::vector<char>> GlobalGrid = {
-	{'.','.','#','.','.'},
-	{'#','.','.','#','.'},
-	{'.','.','P','.','.'},
-	{'.','#','.','.','.'},
-	{'.','.','#','.','.'}
-	};
 }
 
 Game::~Game() = default;

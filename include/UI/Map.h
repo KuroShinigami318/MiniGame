@@ -12,12 +12,14 @@ public:
 	using MapT = std::vector<std::vector<MapHolder>>;
 
 public:
+	Map(const UIContext& i_uiContext);
 	void Initialize(size_t i_width, size_t i_height);
 	Result Initialize(MapT&& i_map);
 	void OnComponentMoved(Position io_position, const Vec2f& i_distanceMoved);
 	void Render(RendererT& o_renderStream) const override;
 	utils::unique_ref<IComponent> Clone() override;
 	IComponent* RetrieveComponent(Position& io_position) override;
+	MapHolder* RetrieveMapHolder(Position& io_position) override;
 	MapHolder ExtractComponent(Position& io_position) override;
 	MapHolder AddComponent(MapHolder i_mapHolder, Position& io_position) override;
 
@@ -33,6 +35,7 @@ private:
 	};
 
 	void OnCollision(Position io_position, Position io_destinationPosition);
+	void OnComponentBroken(Position i_position, utils::CallableBound<void()> i_callbackAction, class IBreakable&);
 	void ReinsertExtractedComponents();
 
 private:

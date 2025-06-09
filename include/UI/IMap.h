@@ -3,7 +3,7 @@
 
 class Position;
 
-class IMap :  public IUIComponent
+class IMap : virtual public IUIComponent
 {
 public:
 	struct MapHolder
@@ -11,11 +11,12 @@ public:
 		MapHolder() = default;
 		MapHolder(std::unique_ptr<IComponent> i_component) : component(std::move(i_component)) {}
 		std::unique_ptr<IComponent> component;
-		utils::Connection connection;
+		std::unordered_map<std::type_index, utils::Connection> connections;
 	};
 
 public:
 	virtual IComponent* RetrieveComponent(Position& io_position) = 0;
+	virtual MapHolder* RetrieveMapHolder(Position& io_position) = 0;
 	virtual MapHolder ExtractComponent(Position& io_position) = 0;
 	virtual MapHolder AddComponent(MapHolder i_mapHolder, Position& io_position) = 0;
 };

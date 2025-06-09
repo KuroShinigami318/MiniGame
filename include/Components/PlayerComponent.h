@@ -1,4 +1,5 @@
 #pragma once
+#include "GameplaySystem/ICollidable.h"
 #include "IPlayer.h"
 #include "MovableComponent.h"
 #include "UI/IUIComponent.h"
@@ -6,12 +7,13 @@
 
 constexpr const Vec2f k_defaultVeclocity(1.f);
 
-class PlayerComponent : public IPlayer, public MovableComponent, public IUIComponent
+class PlayerComponent : public IPlayer, public MovableComponent, public IUIComponent, public ICollidable
 {
 public:
-	PlayerComponent(const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock);
+	PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock);
 	void Render(RendererT& o_renderStream) const override;
 	utils::unique_ref<IComponent> Clone() override;
+	void OnCollision(const ICollidable& i_other) override;
 
 private:
 	void OnControlReceived(const IGameControl::ControlType& i_controlType);

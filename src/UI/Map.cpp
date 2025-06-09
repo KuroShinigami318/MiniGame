@@ -1,8 +1,15 @@
 #include "stdafx.h"
 #include "Components/IPlayer.h"
 #include "Components/MovableComponent.h"
+#include "GameplaySystem/IBreakable.h"
+#include "GameplaySystem/ICollidable.h"
 #include "UI/Map.h"
 #include "UI/UiTypes.h"
+
+Map::Map(const UIContext& i_uiContext)
+	: IUIComponent(i_uiContext)
+{
+}
 
 void Map::Initialize(size_t i_width, size_t i_height)
 {
@@ -86,7 +93,7 @@ utils::unique_ref<IComponent> Map::Clone()
 			}
 		}
 	}
-	Map* map = new Map();
+	Map* map = new Map(m_uiContext);
 	map->Initialize(std::move(clonedMap)).assertSuccess();
 	return map;
 }
@@ -114,6 +121,15 @@ IComponent* Map::RetrieveComponent(Position& io_position)
 		return nullptr;
 	}
 	return m_map[io_position.y.value][io_position.x.value].component.get();
+}
+
+IMap::MapHolder* Map::RetrieveMapHolder(Position& io_position)
+{
+	if (!IsValidPosition(io_position))
+	{
+		return nullptr;
+	}
+	return &m_map[io_position.y.value][io_position.x.value];
 }
 
 IMap::MapHolder Map::ExtractComponent(Position& io_position)
@@ -153,23 +169,52 @@ bool Map::IsValidPosition(Position& io_position) const
 
 void Map::OnCollision(Position io_position, Position io_destinationPosition)
 {
-	/*if (ICollidable* collidable = dynamic_cast<ICollidable*>(RetrieveComponent(io_position))
+	IBreakable* breakableA = dynamic_cast<IBreakable*>(RetrieveComponent(io_position));
+	IBreakable* breakableB = dynamic_cast<IBreakable*>(RetrieveComponent(io_destinationPosition));
+	utils::CallableBound<void()> refreshOnCollision(&Map::OnCollision, this, io_position, io_destinationPosition);
+	if (breakableA)
 	{
+		MapHolder* holder = RetrieveMapHolder(io_position);
+		holder->connections.insert_or_assign(utils::get_type_index(breakableA->sig_onBroken), breakableA->sig_onBroken.Connect(&Map::OnComponentBroken, this, io_position, refreshOnCollision));
 	}
-	else*/
+	if (breakableB)
+	{
+		MapHolder* holder = RetrieveMapHolder(io_position);
+		holder->connections.insert_or_assign(utils::get_type_index(breakableB->sig_onBroken), breakableB->sig_onBroken.Connect(&Map::OnComponentBroken, this, io_destinationPosition, refreshOnCollision));
+	}
+
+	ICollidable* collidableA = dynamic_cast<ICollidable*>(RetrieveComponent(io_position));
+	ICollidable* collidableB = dynamic_cast<ICollidable*>(RetrieveComponent(io_destinationPosition));
+	if (collidableA && collidableB)
+	{
+		collidableA->OnCollision(*collidableB);
+		collidableB->OnCollision(*collidableA);
+	}
+	else
 	{
 		MapHolder holder = ExtractComponent(io_position);
-		holder.connection.Disconnect();
 		if (MovableComponent* movableComponent = dynamic_cast<MovableComponent*>(holder.component.get()))
 		{
-			holder.connection = movableComponent->sig_onMoved.Connect(&Map::OnComponentMoved, this, io_destinationPosition);
+			holder.connections.insert_or_assign(utils::get_type_index(movableComponent->sig_onMoved), movableComponent->sig_onMoved.Connect(&Map::OnComponentMoved, this, io_destinationPosition));
 		}
 		MapHolder destinationHolder = AddComponent(std::move(holder), io_destinationPosition);
 		if (destinationHolder.component)
 		{
-			destinationHolder.connection.Lock();
+			std::for_each(destinationHolder.connections.begin(), destinationHolder.connections.end(), [](auto& connection)
+			{
+				connection.second.Lock();
+			});
 			m_extractedComponents.push_back({ io_destinationPosition, std::move(destinationHolder) });
 		}
+	}
+}
+
+void Map::OnComponentBroken(Position i_position, utils::CallableBound<void()> i_callbackAction, IBreakable& o_breakable)
+{
+	StartOptionalTask(m_uiContext.thisFrameQueue, utils::CallableBound<void()>(&Map::ExtractComponent, this, i_position));
+	if (i_callbackAction)
+	{
+		StartOptionalTask(m_uiContext.thisFrameQueue, i_callbackAction);
 	}
 }
 
@@ -179,7 +224,10 @@ void Map::ReinsertExtractedComponents()
 	{
 		if (RetrieveComponent(it->position) == nullptr)
 		{
-			it->mapHolder.connection.Unlock();
+			std::for_each(it->mapHolder.connections.begin(), it->mapHolder.connections.end(), [](auto& connection)
+			{
+				connection.second.Unlock();
+			});
 			m_map[it->position.y.value][it->position.x.value] = std::move(it->mapHolder);
 			it = m_extractedComponents.erase(it);
 		}
