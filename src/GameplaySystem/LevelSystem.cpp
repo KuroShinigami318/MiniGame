@@ -4,6 +4,7 @@
 #include "GameplaySystem/Level.h"
 #include "Components/PlayerComponent.h"
 #include "Components/ItemComponent.h"
+#include "Components/WallComponent.h"
 #include "UI/Map.h"
 #include "Log.h"
 #include "system_clock.h"
@@ -13,9 +14,9 @@ namespace
 {
 constexpr const int k_heightLimit = 10;
 template <typename T, typename RandomGenerator>
-size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std::unordered_set<Position>& o_positions, const UIContext& i_uiContext, ILevel& i_level, size_t i_width, size_t i_height, size_t i_limit)
+size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std::unordered_set<Position>& o_positions, const UIContext& i_uiContext, ILevel& i_level, size_t i_width, size_t i_height, size_t& o_remainingPossibleComponents)
 {
-	size_t generateSize = (size_t)i_randomGenerator() % i_limit;
+	size_t generateSize = (size_t)i_randomGenerator() % (o_remainingPossibleComponents + 1);
 	for (size_t i = 0; i < generateSize; ++i)
 	{
 		Position position{ i_randomGenerator() % static_cast<int>(i_width), i_randomGenerator() % static_cast<int>(i_height) };
@@ -27,6 +28,7 @@ size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std
 		o_positions.insert(position);
 		o_map.AddComponent(IMap::MapHolder(std::make_unique<T>(i_uiContext, i_level)), position);
 	}
+	o_remainingPossibleComponents -= generateSize;
 	return generateSize;
 }
 }
@@ -77,9 +79,9 @@ std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t 
 	mapHolder.connections.insert_or_assign(utils::get_type_index(playerComponent.sig_onMoved), playerComponent.sig_onMoved.Connect(&Map::OnComponentMoved, &mapRef, initialPosition));
 	mapRef.AddComponent(std::move(mapHolder), initialPosition);
 
-	size_t remainingPossibleItems = (i_width * i_height) - 1; // -1 for the player component
-	size_t generatedItems = GenerateMapComponents<ItemComponent>(m_randomGenerator, mapRef, positions, uiContext, *level, i_width, i_height, remainingPossibleItems);
-	remainingPossibleItems -= generatedItems;
+	size_t remainingPossibleComponents = (i_width * i_height) - 1; // -1 for the player component
+	size_t generatedItems = GenerateMapComponents<ItemComponent>(m_randomGenerator, mapRef, positions, uiContext, *level, i_width, i_height, remainingPossibleComponents);
+	size_t generatedWalls = GenerateMapComponents<WallComponent>(m_randomGenerator, mapRef, positions, uiContext, *level, i_width, i_height, remainingPossibleComponents);
 
 	level->SetObjectiveScore(generatedItems);
 	m_levelFinishedConnection = level->sig_onFinishedLevel.Connect(
