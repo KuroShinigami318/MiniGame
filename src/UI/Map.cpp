@@ -215,7 +215,7 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 
 	ICollidable* collidableA = dynamic_cast<ICollidable*>(RetrieveComponent(io_position));
 	ICollidable* collidableB = dynamic_cast<ICollidable*>(RetrieveComponent(io_destinationPosition));
-	if (collidableA && collidableB)
+	if (collidableA && collidableB && collidableA->IsCollisionEnabled() && collidableB->IsCollisionEnabled())
 	{
 		collidableA->OnCollision(*collidableB);
 		collidableB->OnCollision(*collidableA);

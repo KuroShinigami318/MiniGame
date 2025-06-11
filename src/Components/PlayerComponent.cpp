@@ -7,6 +7,7 @@
 PlayerComponent::PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock)
 	: IUIComponent(i_uiContext)
 	, MovableComponent(0, i_systemClock)
+	, m_isCollisionEnabled(true)
 	, m_movementVeclocity(i_veclocity)
 	, m_gameControl(i_gameControl)
 	, m_systemClock(i_systemClock)
@@ -24,12 +25,26 @@ utils::unique_ref<IComponent> PlayerComponent::Clone()
 	return utils::make_unique<PlayerComponent>(m_uiContext, m_movementVeclocity, m_gameControl, m_systemClock);
 }
 
+bool PlayerComponent::IsCollisionEnabled() const
+{
+	return m_isCollisionEnabled;
+}
+
 void PlayerComponent::OnCollision(const ICollidable& i_collision)
 {
 	if (const TrapComponent* trap = dynamic_cast<const TrapComponent*>(&i_collision))
 	{
+		m_onControlReceivedConnection.Disconnect();
 		utils::Access<IBreakable::SignalKey>(sig_onBroken).Emit(*this);
 	}
+}
+
+void PlayerComponent::OnShow() const
+{
+}
+
+void PlayerComponent::OnHide() const
+{
 }
 
 void PlayerComponent::OnControlReceived(const IGameControl::ControlType& i_controlType)
@@ -54,6 +69,11 @@ void PlayerComponent::OnControlReceived(const IGameControl::ControlType& i_contr
 	case IGameControl::ControlType::MoveRight:
 	{
 		m_veclocity[0] = m_movementVeclocity[0];
+	}
+	break;
+	case IGameControl::ControlType::ToggleDebug:
+	{
+		m_isCollisionEnabled = !m_isCollisionEnabled;
 	}
 	break;
 	default: break;

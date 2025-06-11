@@ -14,13 +14,17 @@ public:
 	PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock);
 	void Render(RendererT& o_renderStream) const override;
 	utils::unique_ref<IComponent> Clone() override;
+	bool IsCollisionEnabled() const override;
 	void OnCollision(const ICollidable& i_other) override;
+	void OnShow() const override;
+	void OnHide() const override;
 
 private:
 	void OnControlReceived(const IGameControl::ControlType& i_controlType);
 	void OnUpdate(float i_delta) override;
 
 private:
+	bool m_isCollisionEnabled;
 	Vec2f m_movementVeclocity;
 	const IGameControl& m_gameControl;
 	const utils::SystemClock& m_systemClock;
