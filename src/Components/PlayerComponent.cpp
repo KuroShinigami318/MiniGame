@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Components/PlayerComponent.h"
+#include "Components/TrapComponent.h"
 #include "Control/IGameControl.h"
 #include "UI/UIHelper.h"
 
@@ -25,8 +26,10 @@ utils::unique_ref<IComponent> PlayerComponent::Clone()
 
 void PlayerComponent::OnCollision(const ICollidable& i_collision)
 {
-	// Player component does not handle collisions
-	// This is just a placeholder to satisfy the interface
+	if (const TrapComponent* trap = dynamic_cast<const TrapComponent*>(&i_collision))
+	{
+		utils::Access<IBreakable::SignalKey>(sig_onBroken).Emit(*this);
+	}
 }
 
 void PlayerComponent::OnControlReceived(const IGameControl::ControlType& i_controlType)

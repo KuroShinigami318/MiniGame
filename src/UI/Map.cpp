@@ -6,11 +6,6 @@
 #include "UI/Map.h"
 #include "UI/UiTypes.h"
 
-Map::Map(const UIContext& i_uiContext)
-	: IUIComponent(i_uiContext)
-{
-}
-
 void Map::Initialize(size_t i_width, size_t i_height)
 {
 	for (size_t i = 0; i < i_height; ++i)
@@ -21,12 +16,8 @@ void Map::Initialize(size_t i_width, size_t i_height)
 
 Map::Result Map::Initialize(MapT&& i_map)
 {
-	if (Result checkResult = CheckValidMap(i_map); checkResult.isErr())
-	{
-		return checkResult;
-	}
 	m_map = std::move(i_map);
-	return utils::Ok();
+	return CheckValidMap();
 }
 
 void Map::OnComponentMoved(Position io_position, const Vec2f& i_distanceMoved)
@@ -79,6 +70,34 @@ void Map::Render(RendererT& o_renderStream) const
 	}
 }
 
+void Map::OnShow() const
+{
+	for (const auto& row : m_map)
+	{
+		for (const MapHolder& holder : row)
+		{
+			if (IUIComponent* uiComponent = dynamic_cast<IUIComponent*>(holder.component.get()))
+			{
+				uiComponent->OnShow();
+			}
+		}
+	}
+}
+
+void Map::OnHide() const
+{
+	for (const auto& row : m_map)
+	{
+		for (const MapHolder& holder : row)
+		{
+			if (IUIComponent* uiComponent = dynamic_cast<IUIComponent*>(holder.component.get()))
+			{
+				uiComponent->OnHide();
+			}
+		}
+	}
+}
+
 utils::unique_ref<IComponent> Map::Clone()
 {
 	MapT clonedMap;
@@ -98,19 +117,30 @@ utils::unique_ref<IComponent> Map::Clone()
 	return map;
 }
 
-Map::Result Map::CheckValidMap(const MapT& i_map) const
+Map::Result Map::CheckValidMap()
 {
-	for (const auto& row : i_map)
+	bool hasPlayer = false;
+	for (size_t positionY = 0; positionY < m_map.size(); ++positionY)
 	{
-		for (const MapHolder& holder : row)
+		for (size_t positionX = 0; positionX < m_map[positionY].size(); ++positionX)
 		{
+			Position position(positionX, positionY);
+			MapHolder& holder = m_map[positionY][positionX];
 			if (IPlayer* player = dynamic_cast<IPlayer*>(holder.component.get()))
 			{
-				return utils::Ok();
+				hasPlayer = true;
+			}
+			if (IBreakable* breakable = dynamic_cast<IBreakable*>(holder.component.get()))
+			{
+				holder.connections.insert_or_assign(utils::get_type_index(breakable->sig_onBroken), breakable->sig_onBroken.Connect(&Map::OnComponentBroken, this, position, nullptr));
 			}
 		}
 	}
 
+	if (hasPlayer)
+	{
+		return utils::Ok();
+	}
 	return make_error<MapError>(MapErrorCode::InvalidMap, "Missing player!");
 }
 
@@ -179,7 +209,7 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 	}
 	if (breakableB)
 	{
-		MapHolder* holder = RetrieveMapHolder(io_position);
+		MapHolder* holder = RetrieveMapHolder(io_destinationPosition);
 		holder->connections.insert_or_assign(utils::get_type_index(breakableB->sig_onBroken), breakableB->sig_onBroken.Connect(&Map::OnComponentBroken, this, io_destinationPosition, refreshOnCollision));
 	}
 
@@ -200,6 +230,10 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 		MapHolder destinationHolder = AddComponent(std::move(holder), io_destinationPosition);
 		if (destinationHolder.component)
 		{
+			if (IUIComponent* uiComponent = dynamic_cast<IUIComponent*>(destinationHolder.component.get()))
+			{
+				uiComponent->OnHide();
+			}
 			std::for_each(destinationHolder.connections.begin(), destinationHolder.connections.end(), [](auto& connection)
 			{
 				connection.second.Lock();
@@ -211,10 +245,14 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 
 void Map::OnComponentBroken(Position i_position, utils::CallableBound<void()> i_callbackAction, IBreakable& o_breakable)
 {
-	StartOptionalTask(m_uiContext.thisFrameQueue, utils::CallableBound<void()>(&Map::ExtractComponent, this, i_position));
+	StartOptionalTask(m_uiContext.thisFrameQueue, [=]()
+	{
+		Position position = i_position;
+		ExtractComponent(position);
+	});
 	if (i_callbackAction)
 	{
-		StartOptionalTask(m_uiContext.thisFrameQueue, i_callbackAction);
+		StartOptionalTask(m_uiContext.nextFrameQueue, i_callbackAction);
 	}
 }
 
@@ -228,6 +266,10 @@ void Map::ReinsertExtractedComponents()
 			{
 				connection.second.Unlock();
 			});
+			if (IUIComponent* uiComponent = dynamic_cast<IUIComponent*>(it->mapHolder.component.get()))
+			{
+				uiComponent->OnShow();
+			}
 			m_map[it->position.y.value][it->position.x.value] = std::move(it->mapHolder);
 			it = m_extractedComponents.erase(it);
 		}

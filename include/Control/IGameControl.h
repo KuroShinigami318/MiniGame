@@ -10,7 +10,8 @@ public:
 		MoveUp,
 		MoveDown,
 		MoveRight,
-		MoveLeft);
+		MoveLeft,
+		ToggleDebug);
 public:
 	virtual ~IGameControl() = default;
 	utils::Signal_public<void(ControlType), SignalKey> sig_onControlReceived;

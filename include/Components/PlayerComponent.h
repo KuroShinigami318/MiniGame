@@ -1,4 +1,5 @@
 #pragma once
+#include "GameplaySystem/IBreakable.h"
 #include "GameplaySystem/ICollidable.h"
 #include "IPlayer.h"
 #include "MovableComponent.h"
@@ -7,7 +8,7 @@
 
 constexpr const Vec2f k_defaultVeclocity(1.f);
 
-class PlayerComponent : public IPlayer, public MovableComponent, public IUIComponent, public ICollidable
+class PlayerComponent : public IPlayer, public MovableComponent, public IUIComponent, public ICollidable, public IBreakable
 {
 public:
 	PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock);

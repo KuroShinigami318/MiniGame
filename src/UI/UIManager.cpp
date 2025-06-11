@@ -13,6 +13,7 @@ IUIManager::Result UIManager::RegisterUIComponent(const IUIComponent& i_uiCompon
 	{
 		return make_error<Error>(ErrorCode::AlreadyRegisteredComponent);
 	}
+	i_uiComponent.OnShow();
 	m_uiComponents.push_back(&i_uiComponent);
 	return utils::Ok();
 }
@@ -28,6 +29,7 @@ IUIManager::Result UIManager::UnregisterUIComponent(const IUIComponent& i_uiComp
 	{
 		return make_error<Error>(ErrorCode::UnregisteredComponent);
 	}
+	i_uiComponent.OnHide();
 	m_uiComponents.erase(componentFoundIt);
 	return utils::Ok();
 }

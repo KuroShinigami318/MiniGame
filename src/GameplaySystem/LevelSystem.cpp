@@ -4,6 +4,7 @@
 #include "GameplaySystem/Level.h"
 #include "Components/PlayerComponent.h"
 #include "Components/ItemComponent.h"
+#include "Components/TrapComponent.h"
 #include "Components/WallComponent.h"
 #include "UI/Map.h"
 #include "Log.h"
@@ -33,10 +34,11 @@ size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std
 }
 }
 
-LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue)
+LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue)
 	: m_gameControl(i_gameControl)
 	, m_systemClock(i_systemClock)
 	, m_thisFrameQueue(i_thisFrameQueue)
+	, m_nextFrameQueue(i_nextFrameQueue)
 	, m_asyncScopedHelper(utils::make_unique<utils::AsyncScopedHelper>())
 {
 	m_updateConnection = i_systemClock.sig_onTick.Connect(&LevelSystem::Update, this);
@@ -66,7 +68,7 @@ std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel()
 
 std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t i_height)
 {
-	UIContext uiContext{ m_thisFrameQueue };
+	UIContext uiContext{ m_thisFrameQueue, m_nextFrameQueue };
 	std::unordered_set<Position> positions;
 	utils::unique_ref<Map> map = utils::make_unique<Map>(uiContext);
 	Map& mapRef = *map;
@@ -77,13 +79,17 @@ std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t 
 	positions.insert(initialPosition);
 	PlayerComponent& playerComponent = dynamic_cast<PlayerComponent&>(*mapHolder.component);
 	mapHolder.connections.insert_or_assign(utils::get_type_index(playerComponent.sig_onMoved), playerComponent.sig_onMoved.Connect(&Map::OnComponentMoved, &mapRef, initialPosition));
+	m_playerConnection = playerComponent.sig_onBroken.Connect(&LevelSystem::OnPlayerBroken, this, i_width, i_height, *level);
 	mapRef.AddComponent(std::move(mapHolder), initialPosition);
 
 	size_t remainingPossibleComponents = (i_width * i_height) - 1; // -1 for the player component
 	size_t generatedItems = GenerateMapComponents<ItemComponent>(m_randomGenerator, mapRef, positions, uiContext, *level, i_width, i_height, remainingPossibleComponents);
 	size_t generatedWalls = GenerateMapComponents<WallComponent>(m_randomGenerator, mapRef, positions, uiContext, *level, i_width, i_height, remainingPossibleComponents);
+	size_t generatedTraps = GenerateMapComponents<TrapComponent>(m_randomGenerator, mapRef, positions, uiContext, *level, i_width, i_height, remainingPossibleComponents);
 
 	level->SetObjectiveScore(generatedItems);
+	level->SetAllowedRespawns(generatedTraps - 1);
+	level->CheckValidMap().assertSuccess();
 	m_levelFinishedConnection = level->sig_onFinishedLevel.Connect(
 		[this]()
 		{
@@ -92,5 +98,43 @@ std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t 
 				utils::Access<SignalKey>(sig_onLevelChanged).Emit(GenerateRandomLevel());
 			});
 		});
+	m_gameControlConnection = m_gameControl.sig_onControlReceived.Connect(
+		[](ILevel& level, IGameControl::ControlType i_controlType)
+		{
+			if (i_controlType == IGameControl::ControlType::ToggleDebug)
+			{
+				level.SetDebugEnable(!level.IsDebugEnabled());
+			}
+		}, *level);
 	return level;
+}
+
+void LevelSystem::OnPlayerBroken(size_t i_width, size_t i_height, ILevel& o_level)
+{
+	if (!o_level.Respawn())
+	{
+		o_level.ResetScore();
+		o_level.DecreaseScore();
+	}
+	else
+	{
+		RespawnPlayer(i_width, i_height, o_level);
+	}
+}
+
+void LevelSystem::RespawnPlayer(size_t i_width, size_t i_height, ILevel& o_level)
+{
+	Level& level = dynamic_cast<Level&>(o_level);
+	UIContext uiContext{ m_thisFrameQueue, m_nextFrameQueue };
+	IMap::MapHolder mapHolder{ std::make_unique<PlayerComponent>(uiContext, k_defaultVeclocity, m_gameControl, m_systemClock) };
+	Position playerPosition{ m_randomGenerator() % static_cast<int>(i_width), m_randomGenerator() % static_cast<int>(i_height) };
+	while (level.RetrieveComponent(playerPosition))
+	{
+		playerPosition.x = m_randomGenerator() % static_cast<int>(i_width);
+		playerPosition.y = m_randomGenerator() % static_cast<int>(i_height);
+	}
+	PlayerComponent& playerComponent = dynamic_cast<PlayerComponent&>(*mapHolder.component);
+	mapHolder.connections.insert_or_assign(utils::get_type_index(playerComponent.sig_onMoved), playerComponent.sig_onMoved.Connect(&Map::OnComponentMoved, dynamic_cast<Map*>(&level.GetMap()), playerPosition));
+	m_playerConnection = playerComponent.sig_onBroken.Connect(&LevelSystem::OnPlayerBroken, this, i_width, i_height, o_level);
+	level.AddComponent(std::move(mapHolder), playerPosition);
 }

@@ -7,19 +7,29 @@ class Level : public IMap, public ILevel
 public:
 	Level(utils::unique_ref<IMap> i_map);
 	void Render(RendererT& o_renderStream) const override;
+	void OnShow() const override;
+	void OnHide() const override;
 	utils::unique_ref<IComponent> Clone() override;
 	IComponent* RetrieveComponent(Position& io_position) override;
 	MapHolder* RetrieveMapHolder(Position& io_position) override;
 	MapHolder ExtractComponent(Position& io_position) override;
 	MapHolder AddComponent(MapHolder i_mapHolder, Position& io_position) override;
+	Result CheckValidMap() override;
 	void IncreaseScore() override;
 	void DecreaseScore() override;
 	void ResetScore() override;
-	size_t GetScore() const override;
-	void SetObjectiveScore(size_t i_objectiveScore);
+	long long GetScore() const override;
+	bool Respawn() override;
+	void SetObjectiveScore(long long i_objectiveScore);
+	void SetAllowedRespawns(int i_allowedRespawns);
+	IMap& GetMap() const;
+	void SetDebugEnable(bool i_enable) override;
+	bool IsDebugEnabled() const override;
 
 private:
 	utils::unique_ref<IMap> m_map;
-	size_t m_objectiveScore = 0;
-	size_t m_score = 0;
+	int m_allowedRespawns = 0;
+	long long m_objectiveScore = 0;
+	long long m_score = 0;
+	bool m_debugEnabled = false;
 };

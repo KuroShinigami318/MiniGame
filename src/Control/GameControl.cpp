@@ -3,7 +3,7 @@
 #include "IInputDevice.h"
 
 GameControl::GameControl()
-	: m_inputControlMapped({{"w", ControlType::MoveUp}, { "s", ControlType::MoveDown }, { "a", ControlType::MoveLeft } , { "d", ControlType::MoveRight } })
+	: m_inputControlMapped({ {"w", ControlType::MoveUp}, { "s", ControlType::MoveDown }, { "a", ControlType::MoveLeft } , { "d", ControlType::MoveRight }, { "l", ControlType::ToggleDebug }})
 	, m_inputDevices()
 {
 }

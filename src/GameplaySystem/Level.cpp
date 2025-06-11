@@ -5,12 +5,21 @@ Level::Level(utils::unique_ref<IMap> i_map)
 	: IUIComponent(i_map->GetUIContext())
 	, m_map(std::move(i_map))
 {
-
 }
 
 void Level::Render(RendererT& o_renderStream) const
 {
 	m_map->Render(o_renderStream);
+}
+
+void Level::OnShow() const
+{
+	m_map->OnShow();
+}
+
+void Level::OnHide() const
+{
+	m_map->OnHide();
 }
 
 utils::unique_ref<IComponent> Level::Clone()
@@ -38,6 +47,11 @@ IMap::MapHolder Level::AddComponent(IMap::MapHolder i_mapHolder, Position& io_po
 	return m_map->AddComponent(std::move(i_mapHolder), io_position);
 }
 
+IMap::Result Level::CheckValidMap()
+{
+	return m_map->CheckValidMap();
+}
+
 void Level::IncreaseScore()
 {
 	if (++m_score == m_objectiveScore)
@@ -48,10 +62,7 @@ void Level::IncreaseScore()
 
 void Level::DecreaseScore()
 {
-	if (m_score > 0)
-	{
-		m_score--;
-	}
+	m_score--;
 }
 
 void Level::ResetScore()
@@ -59,12 +70,37 @@ void Level::ResetScore()
 	m_score = 0;
 }
 
-size_t Level::GetScore() const
+long long Level::GetScore() const
 {
 	return m_score;
 }
 
-void Level::SetObjectiveScore(size_t i_objectiveScore)
+bool Level::Respawn()
+{
+	return m_allowedRespawns-- > 0;
+}
+
+void Level::SetObjectiveScore(long long i_objectiveScore)
 {
 	m_objectiveScore = i_objectiveScore;
+}
+
+void Level::SetAllowedRespawns(int i_allowedRespawns)
+{
+	m_allowedRespawns = i_allowedRespawns;
+}
+
+IMap& Level::GetMap() const
+{
+	return *m_map;
+}
+
+void Level::SetDebugEnable(bool i_enable)
+{
+	m_debugEnabled = i_enable;
+}
+
+bool Level::IsDebugEnabled() const
+{
+	return m_debugEnabled;
 }

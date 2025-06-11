@@ -17,7 +17,11 @@ utils::unique_ref<IComponent> ScoresComponent::Clone()
 
 void ScoresComponent::Render(RendererT& o_renderStream) const
 {
-	std::string scores = FormatText(utils::Format("Your scores is: {}", m_level.GetScore()).c_str(), utils::Log::TextFormat{utils::Log::TextStyle::Italic, utils::RGBColor{0, 255, 0}});
+	std::string scores = FormatText(utils::Format("Your scores is: {}", m_level.GetScore()).c_str(), utils::Log::TextFormat{ utils::Log::TextStyle::Italic, utils::RGBColor{0, 255, 0} });
+	if (m_level.GetScore() < 0)
+	{
+		scores = FormatText(utils::Format("You are lose!").c_str(), utils::Log::TextFormat{ utils::Log::TextStyle::Italic, utils::RGBColor{255, 0, 0} });
+	}
 	o_renderStream << scores;
 	o_renderStream << std::endl << "\033[1G";
 }
