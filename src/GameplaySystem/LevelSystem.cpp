@@ -34,11 +34,12 @@ size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std
 }
 }
 
-LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue)
+LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue, utils::IRecursiveControl& i_recursiveControl)
 	: m_gameControl(i_gameControl)
 	, m_systemClock(i_systemClock)
 	, m_thisFrameQueue(i_thisFrameQueue)
 	, m_nextFrameQueue(i_nextFrameQueue)
+	, m_recursiveControl(i_recursiveControl)
 	, m_asyncScopedHelper(utils::make_unique<utils::AsyncScopedHelper>())
 {
 	m_updateConnection = i_systemClock.sig_onTick.Connect(&LevelSystem::Update, this);
@@ -68,7 +69,7 @@ std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel()
 
 std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t i_height)
 {
-	UIContext uiContext{ m_thisFrameQueue, m_nextFrameQueue };
+	UIContext uiContext{ m_thisFrameQueue, m_nextFrameQueue, m_recursiveControl };
 	std::unordered_set<Position> positions;
 	utils::unique_ref<Map> map = utils::make_unique<Map>(uiContext);
 	Map& mapRef = *map;
@@ -125,7 +126,7 @@ void LevelSystem::OnPlayerBroken(size_t i_width, size_t i_height, ILevel& o_leve
 void LevelSystem::RespawnPlayer(size_t i_width, size_t i_height, ILevel& o_level)
 {
 	Level& level = dynamic_cast<Level&>(o_level);
-	UIContext uiContext{ m_thisFrameQueue, m_nextFrameQueue };
+	UIContext uiContext{ m_thisFrameQueue, m_nextFrameQueue, m_recursiveControl };
 	IMap::MapHolder mapHolder{ std::make_unique<PlayerComponent>(uiContext, k_defaultVeclocity, m_gameControl, m_systemClock) };
 	Position playerPosition{ m_randomGenerator() % static_cast<int>(i_width), m_randomGenerator() % static_cast<int>(i_height) };
 	while (level.RetrieveComponent(playerPosition))

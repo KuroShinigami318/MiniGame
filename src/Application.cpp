@@ -159,7 +159,7 @@ Application::FrameResult Application::FrameEpilogue() const
 
 void Application::CreateGame()
 {
-    m_game = std::make_unique<Game>(GetNextFrameMessageQueue(), GetThisFrameMessageQueue());
+    m_game = std::make_unique<Game>(GetNextFrameMessageQueue(), GetThisFrameMessageQueue(), GetRecursiveControl());
 }
 
 void Application::DestroyGame()

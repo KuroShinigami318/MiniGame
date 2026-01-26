@@ -15,7 +15,7 @@ private:
 	struct SignalKey;
 
 public:
-	LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue);
+	LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue, utils::IRecursiveControl& i_recursiveControl);
 	~LevelSystem();
 
 private:
@@ -32,6 +32,7 @@ public:
 private:
 	utils::IMessageQueue& m_thisFrameQueue;
 	utils::IMessageQueue& m_nextFrameQueue;
+   utils::IRecursiveControl& m_recursiveControl;
 	const IGameControl& m_gameControl;
 	const utils::SystemClock& m_systemClock;
 	utils::Connection m_gameControlConnection;

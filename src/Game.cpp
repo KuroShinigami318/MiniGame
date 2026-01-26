@@ -8,13 +8,14 @@
 #include "UI/Map.h"
 #include "system_clock.h"
 
-Game::Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFrameQueue)
+Game::Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFrameQueue, utils::IRecursiveControl& i_recursiveControl)
 	: m_nextFrameQueue(i_nextFrameQueue)
 	, m_thisFrameQueue(i_thisFrameQueue)
+	, m_recursiveControl(i_recursiveControl)
 	, m_systemClock(new utils::SystemClock())
 	, m_gameControl(new GameControl())
 	, m_uiManager(new UIManager())
-	, m_levelSystem(new LevelSystem(*m_gameControl, *m_systemClock, m_thisFrameQueue, m_nextFrameQueue))
+	, m_levelSystem(new LevelSystem(*m_gameControl, *m_systemClock, m_thisFrameQueue, m_nextFrameQueue, m_recursiveControl))
 	, m_mapSystem(new MapSystem(*m_gameControl, *m_uiManager, *m_systemClock, m_thisFrameQueue))
 {
 	m_connections.push_back(m_levelSystem->sig_onLevelChanged.Connect(&MapSystem::SetLevel, m_mapSystem.get()));

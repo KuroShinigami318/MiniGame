@@ -3,6 +3,8 @@
 #include "Components/MovableComponent.h"
 #include "GameplaySystem/IBreakable.h"
 #include "GameplaySystem/ICollidable.h"
+#include "system_clock.h"
+#include "ThreadControl.h"
 #include "UI/Map.h"
 #include "UI/UiTypes.h"
 
@@ -27,26 +29,22 @@ void Map::OnComponentMoved(Position io_position, const Vec2f& i_distanceMoved)
 	{
 		return;
 	}
-	Position newPosition = io_position + i_distanceMoved;
-	IComponent* destinationComponent = RetrieveComponent(newPosition);
-	MovableComponent* movableComponent = dynamic_cast<MovableComponent*>(component);
-	if (!newPosition.IsValid())
-	{
-		if (movableComponent)
-		{
-			movableComponent->ResetMovement(Vec2f(0));
-		}
-		return;
-	}
-	if (destinationComponent == component)
-	{
-		return;
-	}
-	if (movableComponent)
+	if (MovableComponent* movableComponent = dynamic_cast<MovableComponent*>(component))
 	{
 		movableComponent->ResetMovement(Vec2f(0));
 	}
-	OnCollision(io_position, newPosition);
+   Position destinationPosition = io_position + i_distanceMoved;
+	for (Vec2f unitVec = i_distanceMoved / i_distanceMoved.abs(); io_position != destinationPosition;)
+	{
+		Position intermediatePosition = io_position + unitVec;
+      IComponent* intermediateComponent = RetrieveComponent(intermediatePosition);
+		if (intermediateComponent == component || !intermediatePosition.IsValid())
+		{
+			break;
+		}
+		utils::async(m_uiContext.thisFrameQueue, &Map::OnCollision, this, io_position, intermediatePosition);
+		io_position = intermediatePosition;
+   }
 	ReinsertExtractedComponents();
 }
 
@@ -219,6 +217,9 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 	{
 		collidableA->OnCollision(*collidableB);
 		collidableB->OnCollision(*collidableA);
+		utils::SystemClock systemClock;
+      utils::RecursiveYielder yielder(m_uiContext.nextFrameQueue, m_uiContext.recursiveControl, systemClock);
+		yielder.DoYieldWithResult(utils::IYielder::Mode::Forced).ignoreResult();
 	}
 	else
 	{
@@ -226,6 +227,10 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 		if (MovableComponent* movableComponent = dynamic_cast<MovableComponent*>(holder.component.get()))
 		{
 			holder.connections.insert_or_assign(utils::get_type_index(movableComponent->sig_onMoved), movableComponent->sig_onMoved.Connect(&Map::OnComponentMoved, this, io_destinationPosition));
+		}
+		else
+		{
+			return;
 		}
 		MapHolder destinationHolder = AddComponent(std::move(holder), io_destinationPosition);
 		if (destinationHolder.component)
@@ -249,11 +254,11 @@ void Map::OnComponentBroken(Position i_position, utils::CallableBound<void()> i_
 	{
 		Position position = i_position;
 		ExtractComponent(position);
+		if (i_callbackAction)
+		{
+			i_callbackAction();
+      }
 	});
-	if (i_callbackAction)
-	{
-		StartOptionalTask(m_uiContext.nextFrameQueue, i_callbackAction);
-	}
 }
 
 void Map::ReinsertExtractedComponents()

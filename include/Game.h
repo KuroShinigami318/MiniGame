@@ -11,7 +11,7 @@ class IInputDevice;
 class Game
 {
 public:
-	Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFrameQueue);
+	Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFrameQueue, utils::IRecursiveControl& i_recursiveControl);
 	~Game();
 	void RegisterInputDevice(IInputDevice& i_inputDevice);
 	void UnregisterInputDevice(IInputDevice& i_inputDevice);
@@ -23,6 +23,7 @@ public:
 private:
 	utils::MessageSink_mt& m_nextFrameQueue;
 	utils::MessageSink& m_thisFrameQueue;
+   utils::IRecursiveControl& m_recursiveControl;
 	utils::unique_ref<utils::SystemClock> m_systemClock;
 	utils::unique_ref<class GameControl> m_gameControl;
 	utils::unique_ref<class UIManager> m_uiManager;
