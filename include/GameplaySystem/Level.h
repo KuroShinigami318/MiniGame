@@ -2,6 +2,11 @@
 #include "UI/IMap.h"
 #include "GameplaySystem/ILevel.h"
 
+namespace utils
+{
+class TimerDelayer;
+}
+
 class Level : public IMap, public ILevel
 {
 public:
@@ -10,6 +15,8 @@ public:
 	void OnShow() const override;
 	void OnHide() const override;
 	utils::unique_ref<IComponent> Clone() override;
+	size_t GetWidth() const override;
+	size_t GetHeight() const override;
 	IComponent* RetrieveComponent(Position& io_position) override;
 	MapHolder* RetrieveMapHolder(Position& io_position) override;
 	MapHolder ExtractComponent(Position& io_position) override;
@@ -19,6 +26,7 @@ public:
 	void DecreaseScore() override;
 	void ResetScore() override;
 	long long GetScore() const override;
+	void AttachProgressComponent(IProgressComponent& i_progressComponent) override;
 	bool Respawn() override;
 	void SetObjectiveScore(long long i_objectiveScore);
 	void SetAllowedRespawns(int i_allowedRespawns);
@@ -28,6 +36,9 @@ public:
 
 private:
 	utils::unique_ref<IMap> m_map;
+	IProgressComponent* m_progressComponent;
+	utils::unique_ref<utils::TimerDelayer> m_timerDelayer;
+	utils::Connection m_timerDelayerConnection;
 	int m_allowedRespawns = 0;
 	long long m_objectiveScore = 0;
 	long long m_score = 0;

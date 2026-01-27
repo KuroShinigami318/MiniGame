@@ -27,6 +27,7 @@ private:
 	IGameControl& m_gameControl;
 	IUIManager& m_uiManager;
 	utils::IMessageQueue& m_thisFrameQueue;
+	utils::unique_ref<class ProgressComponent> m_progressComponent;
 	std::unique_ptr<IMap> m_map;
 	std::unique_ptr<class ScoresComponent> m_scoresComponent;
 	utils::Connection m_updateConnection;

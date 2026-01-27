@@ -13,6 +13,8 @@ public:
 	void OnShow() const override;
 	void OnHide() const override;
 	utils::unique_ref<IComponent> Clone() override;
+	size_t GetWidth() const override;
+	size_t GetHeight() const override;
 	IComponent* RetrieveComponent(Position& io_position) override;
 	MapHolder* RetrieveMapHolder(Position& io_position) override;
 	MapHolder ExtractComponent(Position& io_position) override;

@@ -1,10 +1,29 @@
 #include "stdafx.h"
 #include "GameplaySystem/Level.h"
+#include "Components/IProgressComponent.h"
+#include "TimerDelayer.h"
+
+namespace
+{
+constexpr const float k_finishedDelayerInMilliseconds = 3000.f;
+}
 
 Level::Level(utils::unique_ref<IMap> i_map)
 	: IUIComponent(i_map->GetUIContext())
 	, m_map(std::move(i_map))
+	, m_progressComponent(nullptr)
+	, m_timerDelayer(utils::make_unique<utils::TimerDelayer>(k_finishedDelayerInMilliseconds))
 {
+	m_timerDelayerConnection = m_timerDelayer->sig_onExpired.Connect(
+	[this]()
+	{
+		utils::async(m_uiContext.thisFrameQueue, [this]()
+		{
+			utils::Access<SignalKey>(sig_onFinishedLevel).Emit();
+		});
+	});
+	m_timerDelayer->CreateTimerThread();
+	m_timerDelayer->Stop();
 }
 
 void Level::Render(RendererT& o_renderStream) const
@@ -25,6 +44,16 @@ void Level::OnHide() const
 utils::unique_ref<IComponent> Level::Clone()
 {
 	return utils::make_unique<Level>(utils::dynamic_unique_cast<IMap>(m_map->Clone()));
+}
+
+size_t Level::GetWidth() const
+{
+	return m_map->GetWidth();
+}
+
+size_t Level::GetHeight() const
+{
+	return m_map->GetHeight();
 }
 
 IComponent* Level::RetrieveComponent(Position& io_position)
@@ -56,8 +85,10 @@ void Level::IncreaseScore()
 {
 	if (++m_score == m_objectiveScore)
 	{
-		utils::Access<SignalKey>(sig_onFinishedLevel).Emit();
+		m_timerDelayer->Reset();
+		utils::async(m_uiContext.thisFrameQueue, &IProgressComponent::UpdateProgress, m_progressComponent, -1.f);
 	}
+	m_progressComponent->UpdateProgress(static_cast<float>(m_score) / static_cast<float>(m_objectiveScore) * m_progressComponent->GetMaxProgress());
 }
 
 void Level::DecreaseScore()
@@ -73,6 +104,11 @@ void Level::ResetScore()
 long long Level::GetScore() const
 {
 	return m_score;
+}
+
+void Level::AttachProgressComponent(IProgressComponent& i_progressComponent)
+{
+	m_progressComponent = &i_progressComponent;
 }
 
 bool Level::Respawn()

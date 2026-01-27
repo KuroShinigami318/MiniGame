@@ -1,6 +1,7 @@
 #pragma once
 
 class IUIComponent;
+struct UIContext;
 
 class IUIManager
 {
@@ -13,6 +14,7 @@ public:
 
 public:
 	virtual ~IUIManager() = default;
+	virtual const UIContext& GetUIContext() const = 0;
 	virtual Result RegisterUIComponent(const IUIComponent&) = 0;
 	virtual Result UnregisterUIComponent(const IUIComponent&) = 0;
 };

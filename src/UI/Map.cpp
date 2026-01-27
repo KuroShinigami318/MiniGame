@@ -37,7 +37,7 @@ void Map::OnComponentMoved(Position io_position, const Vec2f& i_distanceMoved)
 	for (Vec2f unitVec = i_distanceMoved / i_distanceMoved.abs(); io_position != destinationPosition;)
 	{
 		Position intermediatePosition = io_position + unitVec;
-      IComponent* intermediateComponent = RetrieveComponent(intermediatePosition);
+		IComponent* intermediateComponent = RetrieveComponent(intermediatePosition);
 		if (intermediateComponent == component || !intermediatePosition.IsValid())
 		{
 			break;
@@ -142,6 +142,16 @@ Map::Result Map::CheckValidMap()
 	return make_error<MapError>(MapErrorCode::InvalidMap, "Missing player!");
 }
 
+size_t Map::GetWidth() const
+{
+	return m_map.empty() ? 0 : m_map[0].size();
+}
+
+size_t Map::GetHeight() const
+{
+	return m_map.size();
+}
+
 IComponent* Map::RetrieveComponent(Position& io_position)
 {
 	if (!IsValidPosition(io_position))
@@ -218,7 +228,7 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 		collidableA->OnCollision(*collidableB);
 		collidableB->OnCollision(*collidableA);
 		utils::SystemClock systemClock;
-      utils::RecursiveYielder yielder(m_uiContext.nextFrameQueue, m_uiContext.recursiveControl, systemClock);
+		utils::RecursiveYielder yielder(m_uiContext.nextFrameQueue, m_uiContext.recursiveControl, systemClock);
 		yielder.DoYieldWithResult(utils::IYielder::Mode::Forced).ignoreResult();
 	}
 	else

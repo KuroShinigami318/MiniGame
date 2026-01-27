@@ -14,7 +14,7 @@ Game::Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFr
 	, m_recursiveControl(i_recursiveControl)
 	, m_systemClock(new utils::SystemClock())
 	, m_gameControl(new GameControl())
-	, m_uiManager(new UIManager())
+	, m_uiManager(new UIManager(UIContext(i_thisFrameQueue, i_nextFrameQueue, i_recursiveControl, *m_systemClock)))
 	, m_levelSystem(new LevelSystem(*m_gameControl, *m_systemClock, m_thisFrameQueue, m_nextFrameQueue, m_recursiveControl))
 	, m_mapSystem(new MapSystem(*m_gameControl, *m_uiManager, *m_systemClock, m_thisFrameQueue))
 {

@@ -22,6 +22,8 @@ public:
 
 public:
 	using IUIComponent::IUIComponent;
+	virtual size_t GetWidth() const = 0;
+	virtual size_t GetHeight() const = 0;
 	virtual IComponent* RetrieveComponent(Position& io_position) = 0;
 	virtual MapHolder* RetrieveMapHolder(Position& io_position) = 0;
 	virtual MapHolder ExtractComponent(Position& io_position) = 0;

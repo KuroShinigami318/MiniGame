@@ -2,6 +2,11 @@
 #include "UI/UIManager.h"
 #include "UI/IUIComponent.h"
 
+UIManager::UIManager(const UIContext& i_uiContext)
+	: m_uiContext(utils::make_unique<UIContext>(i_uiContext))
+{
+}
+
 IUIManager::Result UIManager::RegisterUIComponent(const IUIComponent& i_uiComponent)
 {
 	auto componentFoundIt = std::find_if(m_uiComponents.begin(), m_uiComponents.end(),
@@ -40,4 +45,9 @@ void UIManager::Render(RendererT& o_renderStream) const
 	{
 		uiComponent->Render(o_renderStream);
 	}
+}
+
+const UIContext& UIManager::GetUIContext() const
+{
+	return *m_uiContext;
 }
