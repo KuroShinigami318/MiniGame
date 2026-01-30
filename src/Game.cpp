@@ -45,7 +45,7 @@ void Game::FrameEpilogue(RendererT& o_renderStream) const
 
 void Game::OnReload()
 {
-
+	m_levelSystem->StartLevelGeneration();
 }
 
 void Game::OnExit()

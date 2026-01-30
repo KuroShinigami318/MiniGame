@@ -43,14 +43,19 @@ LevelSystem::LevelSystem(const IGameControl& i_gameControl, const utils::SystemC
 	, m_asyncScopedHelper(utils::make_unique<utils::AsyncScopedHelper>())
 {
 	m_updateConnection = i_systemClock.sig_onTick.Connect(&LevelSystem::Update, this);
+	StartLevelGeneration();
+}
+
+LevelSystem::~LevelSystem() = default;
+
+void LevelSystem::StartLevelGeneration()
+{
 	m_asyncScopedHelper->StartOptionalTask(m_thisFrameQueue,
 		[this]()
 		{
 			utils::Access<SignalKey>(sig_onLevelChanged).Emit(GenerateRandomLevel());
 		});
 }
-
-LevelSystem::~LevelSystem() = default;
 
 int LevelSystem::ClampRandomGeneratedValue(int i_value, int i_min, int i_max) const
 {
@@ -91,14 +96,7 @@ std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t 
 	level->SetObjectiveScore(generatedItems);
 	level->SetAllowedRespawns(generatedTraps - 1);
 	level->CheckValidMap().assertSuccess();
-	m_levelFinishedConnection = level->sig_onFinishedLevel.Connect(
-		[this]()
-		{
-			m_asyncScopedHelper->StartOptionalTask(m_thisFrameQueue, [this]()
-			{
-				utils::Access<SignalKey>(sig_onLevelChanged).Emit(GenerateRandomLevel());
-			});
-		});
+	m_levelFinishedConnection = level->sig_onFinishedLevel.Connect(&LevelSystem::StartLevelGeneration, this);
 	m_gameControlConnection = m_gameControl.sig_onControlReceived.Connect(
 		[](ILevel& level, IGameControl::ControlType i_controlType)
 		{

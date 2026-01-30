@@ -17,6 +17,7 @@ private:
 public:
 	LevelSystem(const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock, utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue, utils::IRecursiveControl& i_recursiveControl);
 	~LevelSystem();
+	void StartLevelGeneration();
 
 private:
 	void Update(float i_elapsed);
