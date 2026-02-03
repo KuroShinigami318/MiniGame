@@ -5,6 +5,8 @@
 #include "GameplaySystem/MapSystem.h"
 #include "IInputDevice.h"
 #include "UI/UIManager.h"
+#include "UI/WindowManager.h"
+#include "UI/Screens/SplashscreenWindow.h"
 #include "UI/Map.h"
 #include "system_clock.h"
 
@@ -14,11 +16,13 @@ Game::Game(utils::MessageSink_mt& i_nextFrameQueue, utils::MessageSink& i_thisFr
 	, m_recursiveControl(i_recursiveControl)
 	, m_systemClock(new utils::SystemClock())
 	, m_gameControl(new GameControl())
-	, m_uiManager(new UIManager(UIContext(i_thisFrameQueue, i_nextFrameQueue, i_recursiveControl, *m_systemClock)))
-	, m_levelSystem(new LevelSystem(*m_gameControl, *m_systemClock, m_thisFrameQueue, m_nextFrameQueue, m_recursiveControl))
-	, m_mapSystem(new MapSystem(*m_gameControl, *m_uiManager, *m_systemClock, m_thisFrameQueue))
+	, m_windowManager(new WindowManager())
+	, m_uiManager(new UIManager(i_thisFrameQueue, i_nextFrameQueue, i_recursiveControl, *m_systemClock, *m_windowManager))
+	, m_levelSystem(new LevelSystem(*m_gameControl, *m_uiManager))
+	, m_mapSystem(new MapSystem(*m_gameControl, *m_uiManager))
 {
 	m_connections.push_back(m_levelSystem->sig_onLevelChanged.Connect(&MapSystem::SetLevel, m_mapSystem.get()));
+	utils::async(m_thisFrameQueue, &Game::Run, this);
 }
 
 Game::~Game() = default;
@@ -45,10 +49,18 @@ void Game::FrameEpilogue(RendererT& o_renderStream) const
 
 void Game::OnReload()
 {
+	m_windowManager->CloseAllWindows();
 	m_levelSystem->StartLevelGeneration();
+	utils::async(m_thisFrameQueue, &Game::Run, this);
 }
 
 void Game::OnExit()
 {
+	m_windowManager->CloseAllWindows();
+}
 
+void Game::Run()
+{
+	SplashscreenWindow splashscreenWindow(m_uiManager->GetUIContext(), 50.f);
+	splashscreenWindow.Open();
 }

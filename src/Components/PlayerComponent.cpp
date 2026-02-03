@@ -4,13 +4,12 @@
 #include "Control/IGameControl.h"
 #include "UI/UIHelper.h"
 
-PlayerComponent::PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock)
+PlayerComponent::PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl)
 	: IUIComponent(i_uiContext)
-	, MovableComponent(0, i_systemClock)
+	, MovableComponent(0, i_uiContext.systemClock)
 	, m_isCollisionEnabled(true)
 	, m_movementVeclocity(i_veclocity)
 	, m_gameControl(i_gameControl)
-	, m_systemClock(i_systemClock)
 {
 	m_onControlReceivedConnection = m_gameControl.sig_onControlReceived.Connect(&PlayerComponent::OnControlReceived, this);
 }
@@ -22,7 +21,7 @@ void PlayerComponent::Render(RendererT& o_renderStream) const
 
 utils::unique_ref<IComponent> PlayerComponent::Clone()
 {
-	return utils::make_unique<PlayerComponent>(m_uiContext, m_movementVeclocity, m_gameControl, m_systemClock);
+	return utils::make_unique<PlayerComponent>(m_uiContext, m_movementVeclocity, m_gameControl);
 }
 
 bool PlayerComponent::IsCollisionEnabled() const

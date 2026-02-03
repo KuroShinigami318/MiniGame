@@ -2,8 +2,8 @@
 #include "UI/UIManager.h"
 #include "UI/IUIComponent.h"
 
-UIManager::UIManager(const UIContext& i_uiContext)
-	: m_uiContext(utils::make_unique<UIContext>(i_uiContext))
+UIManager::UIManager(utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue, utils::IRecursiveControl& i_recursiveControl, const utils::SystemClock& i_systemClock, WindowManager& i_windowManager)
+	: m_uiContext(utils::make_unique<UIContext>(i_thisFrameQueue, i_nextFrameQueue, i_recursiveControl, i_systemClock, i_windowManager, *this))
 {
 }
 

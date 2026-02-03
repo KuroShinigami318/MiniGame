@@ -7,6 +7,7 @@ struct SystemClock;
 }
 
 class IInputDevice;
+class WindowManager;
 
 class Game
 {
@@ -21,11 +22,15 @@ public:
 	void OnExit();
 
 private:
+	void Run();
+
+private:
 	utils::MessageSink_mt& m_nextFrameQueue;
 	utils::MessageSink& m_thisFrameQueue;
-   utils::IRecursiveControl& m_recursiveControl;
+	utils::IRecursiveControl& m_recursiveControl;
 	utils::unique_ref<utils::SystemClock> m_systemClock;
 	utils::unique_ref<class GameControl> m_gameControl;
+	utils::unique_ref<WindowManager> m_windowManager;
 	utils::unique_ref<class UIManager> m_uiManager;
 	utils::unique_ref<class LevelSystem> m_levelSystem;
 	utils::unique_ref<class MapSystem> m_mapSystem;

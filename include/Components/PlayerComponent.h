@@ -11,7 +11,7 @@ constexpr const Vec2f k_defaultVeclocity(1.f);
 class PlayerComponent : public IPlayer, public MovableComponent, public IUIComponent, public ICollidable, public IBreakable
 {
 public:
-	PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl, const utils::SystemClock& i_systemClock);
+	PlayerComponent(const UIContext& i_uiContext, const Vec2f& i_veclocity, const IGameControl& i_gameControl);
 	void Render(RendererT& o_renderStream) const override;
 	utils::unique_ref<IComponent> Clone() override;
 	bool IsCollisionEnabled() const override;
@@ -27,6 +27,5 @@ private:
 	bool m_isCollisionEnabled;
 	Vec2f m_movementVeclocity;
 	const IGameControl& m_gameControl;
-	const utils::SystemClock& m_systemClock;
 	utils::Connection m_onControlReceivedConnection;
 };
