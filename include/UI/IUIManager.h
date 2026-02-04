@@ -2,6 +2,7 @@
 
 class IUIComponent;
 struct UIContext;
+struct DisplayInfo;
 
 class IUIManager
 {
@@ -17,5 +18,6 @@ public:
 	virtual const UIContext& GetUIContext() const = 0;
 	virtual Result RegisterUIComponent(const IUIComponent&) = 0;
 	virtual Result UnregisterUIComponent(const IUIComponent&) = 0;
+	virtual const DisplayInfo& GetDisplayInfo() const = 0;
 };
 DefineScopeEnumOperatorImpl(ErrorCode, IUIManager)

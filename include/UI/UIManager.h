@@ -16,12 +16,15 @@ class UIManager : public IUIManager
 {
 public:
 	UIManager(utils::IMessageQueue& i_thisFrameQueue, utils::IMessageQueue& i_nextFrameQueue, utils::IRecursiveControl& i_recursiveControl, const utils::SystemClock& i_systemClock, WindowManager& i_windowManager);
+	~UIManager();
 	Result RegisterUIComponent(const IUIComponent&) override;
 	Result UnregisterUIComponent(const IUIComponent&) override;
 	void Render(RendererT& o_renderStream) const;
 	const UIContext& GetUIContext() const override;
+	const DisplayInfo& GetDisplayInfo() const override;
 
 private:
 	std::vector<const IUIComponent*> m_uiComponents;
 	utils::unique_ref<UIContext> m_uiContext;
+	utils::unique_ref<DisplayInfo> m_displayInfo;
 };

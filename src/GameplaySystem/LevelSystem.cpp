@@ -6,6 +6,7 @@
 #include "Components/ItemComponent.h"
 #include "Components/TrapComponent.h"
 #include "Components/WallComponent.h"
+#include "DisplayInfo.h"
 #include "UI/IUIManager.h"
 #include "UI/Map.h"
 #include "Log.h"
@@ -15,7 +16,6 @@
 
 namespace
 {
-constexpr const int k_heightLimit = 10;
 template <typename T, typename RandomGenerator>
 size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std::unordered_set<Position>& o_positions, const UIContext& i_uiContext, ILevel& i_level, size_t i_width, size_t i_height, size_t& o_remainingPossibleComponents)
 {
@@ -65,7 +65,10 @@ void LevelSystem::Update(float i_elapsed)
 
 std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel()
 {
-	return GenerateRandomLevel(m_randomGenerator(), ClampRandomGeneratedValue(m_randomGenerator(), (m_randomGenerator.min)(), k_heightLimit));
+	const DisplayInfo& displayInfo = m_uiManager.GetUIContext().uiManager.GetDisplayInfo();
+	int width = ClampRandomGeneratedValue(m_randomGenerator(), (m_randomGenerator.min)(), displayInfo.width / 2);
+	int height = ClampRandomGeneratedValue(m_randomGenerator(), (m_randomGenerator.min)(), displayInfo.height - 3);
+	return GenerateRandomLevel(width, height);
 }
 
 std::unique_ptr<ILevel> LevelSystem::GenerateRandomLevel(size_t i_width, size_t i_height)
