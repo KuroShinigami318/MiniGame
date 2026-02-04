@@ -1,29 +1,12 @@
 #include "stdafx.h"
 #include "GameplaySystem/Level.h"
 #include "Components/IProgressComponent.h"
-#include "TimerDelayer.h"
-
-namespace
-{
-constexpr const float k_finishedDelayerInMilliseconds = 3000.f;
-}
 
 Level::Level(utils::unique_ref<IMap> i_map)
 	: IUIComponent(i_map->GetUIContext())
 	, m_map(std::move(i_map))
 	, m_progressComponent(nullptr)
-	, m_timerDelayer(utils::make_unique<utils::TimerDelayer>(k_finishedDelayerInMilliseconds))
 {
-	m_timerDelayerConnection = m_timerDelayer->sig_onExpired.Connect(
-	[this]()
-	{
-		utils::async(m_uiContext.thisFrameQueue, [this]()
-		{
-			utils::Access<SignalKey>(sig_onFinishedLevel).Emit();
-		});
-	});
-	m_timerDelayer->CreateTimerThread();
-	m_timerDelayer->Stop();
 }
 
 void Level::Render(RendererT& o_renderStream) const
@@ -85,8 +68,11 @@ void Level::IncreaseScore()
 {
 	if (++m_score == m_objectiveScore)
 	{
-		m_timerDelayer->Reset();
-		utils::async(m_uiContext.thisFrameQueue, &IProgressComponent::UpdateProgress, m_progressComponent, -1.f);
+		m_asyncScopedHelper.StartOptionalTask(GetUIContext().nextFrameQueue,
+			[this]()
+			{
+				utils::Access<SignalKey>(sig_onFinishedLevel).Emit();
+			});
 	}
 	m_progressComponent->UpdateProgress(static_cast<float>(m_score) / static_cast<float>(m_objectiveScore) * m_progressComponent->GetMaxProgress());
 }

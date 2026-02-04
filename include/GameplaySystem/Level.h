@@ -37,8 +37,6 @@ public:
 private:
 	utils::unique_ref<IMap> m_map;
 	IProgressComponent* m_progressComponent;
-	utils::unique_ref<utils::TimerDelayer> m_timerDelayer;
-	utils::Connection m_timerDelayerConnection;
 	int m_allowedRespawns = 0;
 	long long m_objectiveScore = 0;
 	long long m_score = 0;

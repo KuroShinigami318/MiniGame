@@ -39,7 +39,7 @@ size_t GenerateMapComponents(RandomGenerator& i_randomGenerator, Map& o_map, std
 LevelSystem::LevelSystem(const IGameControl& i_gameControl, const IUIManager& i_uiManager)
 	: m_gameControl(i_gameControl)
 	, m_uiManager(i_uiManager)
-	, m_levelGenerationDelayer(utils::make_unique<utils::TimerDelayer>(500.f))
+	, m_levelGenerationDelayer(utils::make_unique<utils::TimerDelayer>(1000.f))
 	, m_asyncScopedHelper(utils::make_unique<utils::AsyncScopedHelper>())
 {
 	m_updateConnection = m_uiManager.GetUIContext().systemClock.sig_onTick.Connect(&LevelSystem::Update, this);
