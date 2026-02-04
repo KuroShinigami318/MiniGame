@@ -176,7 +176,7 @@ void Application::Render()
     if (!m_previousFrameResult.renderStream || m_previousFrameResult.renderStream->str() != m_frameResult.renderStream->str())
     {
         ClearRender();
-        std::cout << m_frameResult.renderStream->str();
+        std::cout << m_frameResult.renderStream->str() << std::flush;
         m_previousFrameResult = std::move(m_frameResult);
     }
 }
