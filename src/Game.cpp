@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Game.h"
 #include "Control/GameControl.h"
+#include "DisplayInfo.h"
 #include "GameplaySystem/LevelSystem.h"
 #include "GameplaySystem/MapSystem.h"
 #include "IInputDevice.h"
@@ -61,6 +62,6 @@ void Game::OnExit()
 
 void Game::Run()
 {
-	SplashscreenWindow splashscreenWindow(m_uiManager->GetUIContext(), 50.f);
+	SplashscreenWindow splashscreenWindow(m_uiManager->GetUIContext(), 0.4f * m_uiManager->GetDisplayInfo().width);
 	splashscreenWindow.Open();
 }
