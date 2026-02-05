@@ -10,7 +10,7 @@ GameplayWindow::GameplayWindow(const UIContext& i_uiContext, utils::unique_ref<I
 
 utils::unique_ref<IComponent> GameplayWindow::Clone()
 {
-	utils::unique_ref<IComponent> clonedComponent = utils::make_unique<GameplayWindow>(m_uiContext, utils::dynamic_unique_cast<IMap>(std::move(m_uiComponents.back())));
+	utils::unique_ref<IComponent> clonedComponent = utils::make_unique<GameplayWindow>(m_uiContext, utils::dynamic_unique_cast<IMap>(m_uiComponents.back()->Clone()));
 	m_uiComponents.pop_back();
 	return clonedComponent;
 }
