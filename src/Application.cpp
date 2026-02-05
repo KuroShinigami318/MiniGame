@@ -109,11 +109,7 @@ void Application::RegisterInputDevice(IInputDevice& i_inputDevice)
     {
         utils::async(m_mainQueue, &Application::RegisterInputDevice, this, i_inputDevice);
     }
-    m_connections.push_back(i_inputDevice.sig_onQuit.Connect(
-        [this]()
-        {
-            RequestExit(ExitReason::Exit);
-        }));
+    m_connections.push_back(i_inputDevice.sig_onQuit.Connect(&Application::RequestExit, this, ExitReason::Exit));
     m_connections.push_back(i_inputDevice.sig_onInput.Connect(
         [this](std::string input)
         {

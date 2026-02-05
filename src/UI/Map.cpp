@@ -260,14 +260,14 @@ void Map::OnCollision(Position io_position, Position io_destinationPosition)
 
 void Map::OnComponentBroken(Position i_position, utils::CallableBound<void()> i_callbackAction, IBreakable& o_breakable)
 {
-	StartOptionalTask(m_uiContext.thisFrameQueue, [=]()
+	StartOptionalTask(m_uiContext.thisFrameQueue, [this, i_position, i_callbackAction]()
 	{
 		Position position = i_position;
 		ExtractComponent(position);
 		if (i_callbackAction)
 		{
 			i_callbackAction();
-      }
+		}
 	});
 }
 
