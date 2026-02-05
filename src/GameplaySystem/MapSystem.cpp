@@ -14,6 +14,7 @@
 MapSystem::MapSystem(IGameControl& i_gameControl, IUIManager& i_uiManager)
 	: m_gameControl(i_gameControl)
 	, m_uiManager(i_uiManager)
+	, m_gameplayWindow(nullptr)
 	, m_asyncScopedHelper(utils::make_unique<utils::AsyncScopedHelper>())
 {
 	m_updateConnection = m_uiManager.GetUIContext().systemClock.sig_onTick.Connect(&MapSystem::Update, this);
@@ -36,18 +37,19 @@ void MapSystem::SetLevel(std::unique_ptr<ILevel> i_level)
 
 void MapSystem::OnMapChanged(std::unique_ptr<IMap> i_map)
 {
-	ILevel& level = dynamic_cast<ILevel&>(*i_map);
-	utils::unique_ref<ProgressComponent> progressComponent = utils::make_unique<ProgressComponent>(m_uiManager.GetUIContext(), static_cast<float>(i_map->GetWidth()));
-	m_gameplayWindow = std::make_unique<GameplayWindow>(m_uiManager.GetUIContext(), std::move(i_map));
-	m_gameplayWindow->AddUIComponent(utils::make_unique<ScoresComponent>(m_uiManager.GetUIContext(), level));
-	IProgressComponent& progressComponentRef = *progressComponent;
-	m_gameplayWindow->AddUIComponent(std::move(progressComponent));
-	level.AttachProgressComponent(progressComponentRef);
 	m_asyncScopedHelper->StartOptionalTask(m_uiManager.GetUIContext().thisFrameQueue,
-		[this]()
+		[this](std::unique_ptr<IMap> i_map)
 		{
+			ILevel& level = dynamic_cast<ILevel&>(*i_map);
+			utils::unique_ref<ProgressComponent> progressComponent = utils::make_unique<ProgressComponent>(m_uiManager.GetUIContext(), static_cast<float>(i_map->GetWidth()));
+			GameplayWindow gameplayWindow(m_uiManager.GetUIContext(), std::move(i_map));
+			m_gameplayWindow = &gameplayWindow;
+			m_gameplayWindow->AddUIComponent(utils::make_unique<ScoresComponent>(m_uiManager.GetUIContext(), level));
+			IProgressComponent& progressComponentRef = *progressComponent;
+			m_gameplayWindow->AddUIComponent(std::move(progressComponent));
+			level.AttachProgressComponent(progressComponentRef);
 			m_gameplayWindow->Open();
-		});
+		}, std::move(i_map));
 }
 
 void MapSystem::OnFinishedLevel()

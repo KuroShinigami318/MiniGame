@@ -27,7 +27,7 @@ private:
 private:
 	IGameControl& m_gameControl;
 	IUIManager& m_uiManager;
-	std::unique_ptr<GameplayWindow> m_gameplayWindow;
+	GameplayWindow* m_gameplayWindow;
 	utils::Connection m_updateConnection;
 	utils::Connection m_onFinishedLevelConnection;
 	utils::unique_ref<utils::AsyncScopedHelper> m_asyncScopedHelper;
